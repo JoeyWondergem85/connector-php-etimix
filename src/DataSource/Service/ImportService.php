@@ -54,40 +54,76 @@ readonly class ImportService
                 } elseif (!empty($tokenData['access_token'])) {
                     $accessToken = $tokenData['access_token'];
 
-                    // Fetch products
-                    $productsUrl = 'https://api.etimix.com/api/v2/products?limit=0&offset=2&excludeNulls=true';
-                    $ch = curl_init($productsUrl);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'Authorization: Bearer ' . $accessToken,
-                        'Accept: application/json',
-                    ]);
-                    $resp = curl_exec($ch);
-                    $curlErr = curl_error($ch);
-                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    curl_close($ch);
+                    // Fetch products with pagination and map to {id, name}
+                    $productsUrlBase = 'https://api.etimix.com/api/v2/products';
+                    $offset = 0;
+                    $limit = 2; // adjust as needed
+                    $totalCount = null;
 
-                    if ($resp === false || $curlErr !== '') {
-                        $this->containerApi->info('Failed to fetch products: ' . $curlErr);
-                    } else {
+                    do {
+                        $url = $productsUrlBase . '?limit=' . $limit . '&offset=' . $offset . '&excludeNulls=true';
+                        $ch = curl_init($url);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            'Authorization: Bearer ' . $accessToken,
+                            'Accept: application/json',
+                        ]);
+                        $resp = curl_exec($ch);
+                        $curlErr = curl_error($ch);
+                        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        curl_close($ch);
+
+                        if ($resp === false || $curlErr !== '') {
+                            $this->containerApi->info('Failed to fetch products: ' . $curlErr);
+                            break;
+                        }
+
                         $data = json_decode($resp, true);
                         if (json_last_error() !== JSON_ERROR_NONE) {
-                            $this->containerApi->info('Invalid JSON response when fetching products.');
-                        } elseif (!empty($data['items']) && is_array($data['items'])) {
-                            // items is expected to be an array of product objects
+                            $this->containerApi->info('Invalid JSON response when fetching products: ' . json_last_error_msg());
+                            break;
+                        }
+
+                        if ($totalCount === null && isset($data['totalCount'])) {
+                            $totalCount = (int) $data['totalCount'];
+                        }
+
+                        if (!empty($data['items']) && is_array($data['items'])) {
                             foreach ($data['items'] as $item) {
-                                // Ensure each item is an associative array
-                                if (is_array($item)) {
-                                    $products[] = $item;
-                                } else {
-                                    $products[] = (array) $item;
+                                if (!is_array($item)) {
+                                    continue;
+                                }
+
+                                // map productId -> id and partnumberManufacturer -> name
+                                if (isset($item['productId'])) {
+                                    $products[] = [
+                                        'id' => (int) $item['productId'],
+                                        'name' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : '',
+                                    ];
+                                }
+                                else {
+	                                $products[] = ['id' => 1, 'name' => 'unknown'];
                                 }
                             }
+
+                            // for now always break when offset is higher than 0, to avoid fetching all products in this example
+                            if ($offset > 0){
+                                break;
+                            }
+
+                            // advance offset
+                            $offset += $limit;
                         } else {
-                            // No items found — notify and leave products empty
-                            $this->containerApi->info('No products found in API response.');
+                            // no items returned
+                            break;
                         }
-                    }
+
+                        // stop if we've fetched all
+                        if ($totalCount !== null && $offset >= $totalCount) {
+                            break;
+                        }
+
+                    } while (true);
                 } else {
                     $this->containerApi->info('Access token not present in OAuth response. HTTP code: ' . $httpCode);
                 }
