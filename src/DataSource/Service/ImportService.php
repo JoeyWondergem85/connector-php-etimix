@@ -57,7 +57,7 @@ readonly class ImportService
                     // Fetch products with pagination and map to {id, name}
                     $productsUrlBase = 'https://api.etimix.com/api/v2/products';
                     $offset = 0;
-                    $limit = 2; // adjust as needed
+                    $limit = 100; // adjust as needed
                     $totalCount = null;
 
                     do {
@@ -98,11 +98,11 @@ readonly class ImportService
                                 if (isset($item['productId'])) {
                                     $products[] = [
                                         'id' => (int) $item['productId'],
+                                        'productId' => (int) $item['productId'],
+                                        'relationManufacturer' => isset($item['relationManufacturer']) ? (string) $item['relationManufacturer'] : '',
+                                        'partnumberManufacturer' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : '',
                                         'name' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : '',
                                     ];
-                                }
-                                else {
-	                                $products[] = ['id' => 1, 'name' => 'unknown'];
                                 }
                             }
 
