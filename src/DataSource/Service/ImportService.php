@@ -57,7 +57,7 @@ readonly class ImportService
                     // Fetch products with pagination and map to {id, name}
                     $productsUrlBase = 'https://api.etimix.com/api/v2/products';
                     $offset = 0;
-                    $limit = 100; // adjust as needed
+                    $limit = 10; // adjust as needed
                     $totalCount = null;
 
                     do {
@@ -97,11 +97,31 @@ readonly class ImportService
                                 // map productId -> id and partnumberManufacturer -> name
                                 if (isset($item['productId'])) {
                                     $products[] = [
-                                        'id' => (int) $item['productId'],
                                         'productId' => (int) $item['productId'],
-                                        'relationManufacturer' => isset($item['relationManufacturer']) ? (string) $item['relationManufacturer'] : '',
-                                        'partnumberManufacturer' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : '',
-                                        'name' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : '',
+                                        'relationManufacturer' => isset($item['relationManufacturer']) ? (string) $item['relationManufacturer'] : null,
+                                        'partnumberManufacturer' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : null,
+                                        'eanCodePartnumber' => isset($item['eanCodePartnumber']) ? (string) $item['eanCodePartnumber'] : null,
+                                        'brand' => isset($item['brand']) ? (string) $item['brand'] : null,
+                                        'productDefines' => isset($item['productDefines']) ? (float) $item['productDefines'] : null,
+                                        'smallestUnit' => isset($item['smallestUnit']) ? (bool) $item['smallestUnit'] : false,
+                                        'netWeight' => isset($item['netWeight']) ? (float) $item['netWeight'] : null,
+                                        'netWeightUnit' => isset($item['netWeightUnit']) ? (string) $item['netWeightUnit'] : null,
+                                        'partNumberSuccessor' => isset($item['partNumberSuccessor']) ? (string) $item['partNumberSuccessor'] : null,
+                                        'ean-CodeSuccessor' => isset($item['ean-CodeSuccessor']) ? (string) $item['ean-CodeSuccessor'] : null,
+                                        'partnumberPredecessor' => isset($item['partnumberPredecessor']) ? (string) $item['partnumberPredecessor'] : null,
+                                        'ean-CodePredecessor' => isset($item['ean-CodePredecessor']) ? (string) $item['ean-CodePredecessor'] : null,
+                                        'dinNumber' => isset($item['dinNumber']) ? (string) $item['dinNumber'] : null,
+                                        'isoNumber' => isset($item['isoNumber']) ? (string) $item['isoNumber'] : null,
+                                        'statusCode' => isset($item['statusCode']) ? (string) $item['statusCode'] : null,
+                                        'sdsRevisionDate' => isset($item['sdsRevisionDate']) ? (string) $item['sdsRevisionDate'] : null,
+                                        'countryOfProductionOrigin' => isset($item['countryOfProductionOrigin']) ? (string) $item['countryOfProductionOrigin'] : null,
+                                        'eccnNumber' => isset($item['eccnNumber']) ? (string) $item['eccnNumber'] : null,
+                                        'sdsIndication' => isset($item['sdsIndication']) ? (bool) $item['sdsIndication'] : false,
+                                        'unCode' => isset($item['unCode']) ? (string) $item['unCode'] : null,
+                                        'reachListDate' => isset($item['reachListDate']) ? (string) $item['reachListDate'] : null,
+                                        'reachIndicator' => isset($item['reachIndicator']) ? (bool) $item['reachIndicator'] : false,
+                                        'created' => isset($item['created']) ? (string) $item['created'] : null,
+                                        'modified' => isset($item['modified']) ? (string) $item['modified'] : null,
                                     ];
                                 }
                             }
