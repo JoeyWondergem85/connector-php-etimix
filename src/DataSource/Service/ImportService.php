@@ -46,11 +46,11 @@ readonly class ImportService
             curl_close($ch);
 
             if ($resp === false || $curlErr !== '') {
-                $this->containerApi->sendNotification('error', 'Failed to request access token: ' . $curlErr);
+                $this->containerApi->info('Failed to request access token: ' . $curlErr);
             } else {
                 $tokenData = json_decode($resp, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    $this->containerApi->sendNotification('error', 'Invalid JSON response when requesting access token.');
+                    $this->containerApi->info('Invalid JSON response when requesting access token.');
                 } elseif (!empty($tokenData['access_token'])) {
                     $accessToken = $tokenData['access_token'];
 
@@ -68,11 +68,11 @@ readonly class ImportService
                     curl_close($ch);
 
                     if ($resp === false || $curlErr !== '') {
-                        $this->containerApi->sendNotification('error', 'Failed to fetch products: ' . $curlErr);
+                        $this->containerApi->info('Failed to fetch products: ' . $curlErr);
                     } else {
                         $data = json_decode($resp, true);
                         if (json_last_error() !== JSON_ERROR_NONE) {
-                            $this->containerApi->sendNotification('error', 'Invalid JSON response when fetching products.');
+                            $this->containerApi->info('Invalid JSON response when fetching products.');
                         } elseif (!empty($data['items']) && is_array($data['items'])) {
                             // items is expected to be an array of product objects
                             foreach ($data['items'] as $item) {
@@ -85,15 +85,15 @@ readonly class ImportService
                             }
                         } else {
                             // No items found — notify and leave products empty
-                            $this->containerApi->sendNotification('warning', 'No products found in API response.');
+                            $this->containerApi->info('No products found in API response.');
                         }
                     }
                 } else {
-                    $this->containerApi->sendNotification('error', 'Access token not present in OAuth response. HTTP code: ' . $httpCode);
+                    $this->containerApi->info('Access token not present in OAuth response. HTTP code: ' . $httpCode);
                 }
             }
         } else {
-            $this->containerApi->sendNotification('warning', 'OAuth client_id / client_secret not set. Skipping remote import.');
+            $this->containerApi->info('OAuth client_id / client_secret not set. Skipping remote import.');
         }
 
         $this->containerApi->appendManyToOutputFile($products);
