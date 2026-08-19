@@ -96,7 +96,107 @@ readonly class ImportService
 
                                 // map productId -> id and partnumberManufacturer -> name
                                 if (isset($item['productId'])) {
-                                    $products[] = [
+                                    // extract technical descriptions by language
+                                    $techNl = null;
+                                    $techEn = null;
+                                    if (!empty($item['technicalDescription']) && is_array($item['technicalDescription'])) {
+                                        foreach ($item['technicalDescription'] as $td) {
+                                            if (!is_array($td)) {
+                                                continue;
+                                            }
+                                            if (isset($td['language'], $td['value'])) {
+                                                if ($td['language'] === 'nl-NL') {
+                                                    $techNl = (string) $td['value'];
+                                                }
+                                                if ($td['language'] === 'en-GB') {
+                                                    $techEn = (string) $td['value'];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // extract features from featureGroups
+                                    $featuresArr = [];
+                                    if (!empty($item['featureGroups']) && is_array($item['featureGroups'])) {
+                                        foreach ($item['featureGroups'] as $fg) {
+                                            if (empty($fg['features']) || !is_array($fg['features'])) {
+                                                continue;
+                                            }
+                                            foreach ($fg['features'] as $feat) {
+                                                if (!is_array($feat) || empty($feat['etimId'])) {
+                                                    continue;
+                                                }
+
+                                                // determine feature label: etimId + translation description (prefer nl-NL)
+                                                $labelDesc = null;
+                                                if (!empty($feat['translations']) && is_array($feat['translations'])) {
+                                                    foreach ($feat['translations'] as $tr) {
+                                                        if (isset($tr['languageCode']) && $tr['languageCode'] === 'nl-NL' && !empty($tr['description'])) {
+                                                            $labelDesc = $tr['description'];
+                                                            break;
+                                                        }
+                                                    }
+                                                    if ($labelDesc === null) {
+                                                        foreach ($feat['translations'] as $tr) {
+                                                            if (!empty($tr['description'])) {
+                                                                $labelDesc = $tr['description'];
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                $label = $feat['etimId'] . ($labelDesc ? ' ' . $labelDesc : '');
+
+                                                // determine value based on type
+                                                $value = null;
+                                                $type = isset($feat['type']) ? (string) $feat['type'] : '';
+                                                if ($type === 'A') {
+                                                    // for A use valueDescription etimId + description if available, otherwise featureValue
+                                                    if (!empty($feat['value']['valueDescription']) && is_array($feat['value']['valueDescription'])) {
+                                                        $vd = $feat['value']['valueDescription'];
+                                                        $vdId = isset($vd['etimId']) ? $vd['etimId'] : null;
+                                                        $vdDesc = null;
+                                                        if (!empty($vd['translations']) && is_array($vd['translations'])) {
+                                                            foreach ($vd['translations'] as $vtr) {
+                                                                if (isset($vtr['languageCode']) && $vtr['languageCode'] === 'nl-NL' && !empty($vtr['description'])) {
+                                                                    $vdDesc = $vtr['description'];
+                                                                    break;
+                                                                }
+                                                            }
+                                                            if ($vdDesc === null) {
+                                                                foreach ($vd['translations'] as $vtr) {
+                                                                    if (!empty($vtr['description'])) {
+                                                                        $vdDesc = $vtr['description'];
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        if ($vdId !== null) {
+                                                            $value = $vdId . ($vdDesc ? ' ' . $vdDesc : '');
+                                                        } elseif (isset($feat['value']['featureValue'])) {
+                                                            $value = (string) $feat['value']['featureValue'];
+                                                        }
+                                                    } else {
+                                                        if (isset($feat['value']['featureValue'])) {
+                                                            $value = (string) $feat['value']['featureValue'];
+                                                        }
+                                                    }
+                                                } else {
+                                                    // types N, R, L -> use featureValue
+                                                    if (isset($feat['value']['featureValue'])) {
+                                                        $value = (string) $feat['value']['featureValue'];
+                                                    }
+                                                }
+
+                                                if ($label !== '') {
+                                                    $featuresArr[$label] = $value;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    $mapped = [
                                         'productId' => (int) $item['productId'],
                                         'relationManufacturer' => isset($item['relationManufacturer']) ? (string) $item['relationManufacturer'] : null,
                                         'partnumberManufacturer' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : null,
@@ -120,9 +220,22 @@ readonly class ImportService
                                         'unCode' => isset($item['unCode']) ? (string) $item['unCode'] : null,
                                         'reachListDate' => isset($item['reachListDate']) ? (string) $item['reachListDate'] : null,
                                         'reachIndicator' => isset($item['reachIndicator']) ? (bool) $item['reachIndicator'] : false,
+                                        'technicalDescription_nl-NL' => $techNl,
+                                        'technicalDescription_en-GB' => $techEn,
                                         'created' => isset($item['created']) ? (string) $item['created'] : null,
                                         'modified' => isset($item['modified']) ? (string) $item['modified'] : null,
                                     ];
+
+                                    // merge feature key/value pairs as individual columns
+                                    if (!empty($featuresArr) && is_array($featuresArr)) {
+                                        foreach ($featuresArr as $fKey => $fValue) {
+                                            // replace spaces with underscores to form valid array keys
+                                            $safeKey = str_replace(' ', '_', $fKey);
+                                            $mapped[$safeKey] = $fValue;
+                                        }
+                                    }
+
+                                    $products[] = $mapped;
                                 }
                             }
 
