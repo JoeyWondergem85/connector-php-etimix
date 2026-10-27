@@ -23,7 +23,8 @@ class RunImportCommand extends Command
     {
         try {
             $this->importService->run();
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $output->writeln('<error>Import failed: ' . $e->getMessage() . '</error>');
             return Command::FAILURE;
         }
 

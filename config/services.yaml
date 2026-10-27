@@ -1,3 +1,9 @@
+parameters:
+    # TRADE_PRODUCT_MODE=numbered (default) or repeated. Both layouts prefix product columns with product_.
+    # numbered: one row per product, tradeproduct_1_*, tradeproduct_2_*, ...
+    # repeated: one row per trade product, tradeproduct_*; products without trade products keep one row.
+    env(TRADE_PRODUCT_MODE): 'numbered'
+
 services:
     _defaults:
         autowire: true
@@ -9,3 +15,7 @@ services:
         resource: '../src/'
         exclude:
             - '../src/Kernel.php'
+
+    App\DataSource\Service\ImportService:
+        arguments:
+            $tradeProductMode: '%env(TRADE_PRODUCT_MODE)%'

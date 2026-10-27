@@ -10,10 +10,15 @@ readonly class ImportService
 {
     public function __construct(
         private ContainerApiInterface $containerApi,
+        private string $tradeProductMode,
     ) {}
 
     public function run(): void
     {
+        if (!in_array($this->tradeProductMode, ['numbered', 'repeated'], true)) {
+            throw new \InvalidArgumentException('TRADE_PRODUCT_MODE must be "numbered" or "repeated".');
+        }
+
         $this->containerApi->info('Starting product import.');
 
         // Fetch OAuth token from Etimix and then fetch products
@@ -197,33 +202,33 @@ readonly class ImportService
                                     }
 
                                     $mapped = [
-                                        'productId' => (int) $item['productId'],
-                                        'relationManufacturer' => isset($item['relationManufacturer']) ? (string) $item['relationManufacturer'] : null,
-                                        'partnumberManufacturer' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : null,
-                                        'eanCodePartnumber' => isset($item['eanCodePartnumber']) ? (string) $item['eanCodePartnumber'] : null,
-                                        'brand' => isset($item['brand']) ? (string) $item['brand'] : null,
-                                        'productDefines' => isset($item['productDefines']) ? (float) $item['productDefines'] : null,
-                                        'smallestUnit' => isset($item['smallestUnit']) ? (bool) $item['smallestUnit'] : false,
-                                        'netWeight' => isset($item['netWeight']) ? (float) $item['netWeight'] : null,
-                                        'netWeightUnit' => isset($item['netWeightUnit']) ? (string) $item['netWeightUnit'] : null,
-                                        'partNumberSuccessor' => isset($item['partNumberSuccessor']) ? (string) $item['partNumberSuccessor'] : null,
-                                        'ean-CodeSuccessor' => isset($item['ean-CodeSuccessor']) ? (string) $item['ean-CodeSuccessor'] : null,
-                                        'partnumberPredecessor' => isset($item['partnumberPredecessor']) ? (string) $item['partnumberPredecessor'] : null,
-                                        'ean-CodePredecessor' => isset($item['ean-CodePredecessor']) ? (string) $item['ean-CodePredecessor'] : null,
-                                        'dinNumber' => isset($item['dinNumber']) ? (string) $item['dinNumber'] : null,
-                                        'isoNumber' => isset($item['isoNumber']) ? (string) $item['isoNumber'] : null,
-                                        'statusCode' => isset($item['statusCode']) ? (string) $item['statusCode'] : null,
-                                        'sdsRevisionDate' => isset($item['sdsRevisionDate']) ? (string) $item['sdsRevisionDate'] : null,
-                                        'countryOfProductionOrigin' => isset($item['countryOfProductionOrigin']) ? (string) $item['countryOfProductionOrigin'] : null,
-                                        'eccnNumber' => isset($item['eccnNumber']) ? (string) $item['eccnNumber'] : null,
-                                        'sdsIndication' => isset($item['sdsIndication']) ? (bool) $item['sdsIndication'] : false,
-                                        'unCode' => isset($item['unCode']) ? (string) $item['unCode'] : null,
-                                        'reachListDate' => isset($item['reachListDate']) ? (string) $item['reachListDate'] : null,
-                                        'reachIndicator' => isset($item['reachIndicator']) ? (bool) $item['reachIndicator'] : false,
-                                        'technicalDescription_nl-NL' => $techNl,
-                                        'technicalDescription_en-GB' => $techEn,
-                                        'created' => isset($item['created']) ? (string) $item['created'] : null,
-                                        'modified' => isset($item['modified']) ? (string) $item['modified'] : null,
+                                        'product_productId' => (int) $item['productId'],
+                                        'product_relationManufacturer' => isset($item['relationManufacturer']) ? (string) $item['relationManufacturer'] : null,
+                                        'product_partnumberManufacturer' => isset($item['partnumberManufacturer']) ? (string) $item['partnumberManufacturer'] : null,
+                                        'product_eanCodePartnumber' => isset($item['eanCodePartnumber']) ? (string) $item['eanCodePartnumber'] : null,
+                                        'product_brand' => isset($item['brand']) ? (string) $item['brand'] : null,
+                                        'product_productDefines' => isset($item['productDefines']) ? (float) $item['productDefines'] : null,
+                                        'product_smallestUnit' => isset($item['smallestUnit']) ? (bool) $item['smallestUnit'] : false,
+                                        'product_netWeight' => isset($item['netWeight']) ? (float) $item['netWeight'] : null,
+                                        'product_netWeightUnit' => isset($item['netWeightUnit']) ? (string) $item['netWeightUnit'] : null,
+                                        'product_partNumberSuccessor' => isset($item['partNumberSuccessor']) ? (string) $item['partNumberSuccessor'] : null,
+                                        'product_ean-CodeSuccessor' => isset($item['ean-CodeSuccessor']) ? (string) $item['ean-CodeSuccessor'] : null,
+                                        'product_partnumberPredecessor' => isset($item['partnumberPredecessor']) ? (string) $item['partnumberPredecessor'] : null,
+                                        'product_ean-CodePredecessor' => isset($item['ean-CodePredecessor']) ? (string) $item['ean-CodePredecessor'] : null,
+                                        'product_dinNumber' => isset($item['dinNumber']) ? (string) $item['dinNumber'] : null,
+                                        'product_isoNumber' => isset($item['isoNumber']) ? (string) $item['isoNumber'] : null,
+                                        'product_statusCode' => isset($item['statusCode']) ? (string) $item['statusCode'] : null,
+                                        'product_sdsRevisionDate' => isset($item['sdsRevisionDate']) ? (string) $item['sdsRevisionDate'] : null,
+                                        'product_countryOfProductionOrigin' => isset($item['countryOfProductionOrigin']) ? (string) $item['countryOfProductionOrigin'] : null,
+                                        'product_eccnNumber' => isset($item['eccnNumber']) ? (string) $item['eccnNumber'] : null,
+                                        'product_sdsIndication' => isset($item['sdsIndication']) ? (bool) $item['sdsIndication'] : false,
+                                        'product_unCode' => isset($item['unCode']) ? (string) $item['unCode'] : null,
+                                        'product_reachListDate' => isset($item['reachListDate']) ? (string) $item['reachListDate'] : null,
+                                        'product_reachIndicator' => isset($item['reachIndicator']) ? (bool) $item['reachIndicator'] : false,
+                                        'product_technicalDescription_nl-NL' => $techNl,
+                                        'product_technicalDescription_en-GB' => $techEn,
+                                        'product_created' => isset($item['created']) ? (string) $item['created'] : null,
+                                        'product_modified' => isset($item['modified']) ? (string) $item['modified'] : null,
                                     ];
 
                                     // merge feature key/value pairs as individual columns
@@ -231,11 +236,44 @@ readonly class ImportService
                                         foreach ($featuresArr as $fKey => $fValue) {
                                             // replace spaces with underscores to form valid array keys
                                             $safeKey = str_replace(' ', '_', $fKey);
-                                            $mapped[$safeKey] = $fValue;
+                                            $mapped['product_' . $safeKey] = $fValue;
                                         }
                                     }
 
-                                    $products[] = $mapped;
+                                    $tradeProducts = $item['tradeProducts'] ?? [];
+                                    if (!is_array($tradeProducts)) {
+                                        throw new \UnexpectedValueException('Expected tradeProducts to be an array.');
+                                    }
+
+                                    if ($tradeProducts === []) {
+                                        $products[] = $mapped;
+                                    }
+
+                                    foreach ($tradeProducts as $index => $tradeProduct) {
+                                        if (!is_array($tradeProduct)) {
+                                            throw new \UnexpectedValueException('Expected every tradeProduct to be an object.');
+                                        }
+
+                                        $prefix = $this->tradeProductMode === 'numbered'
+                                            ? 'tradeproduct_' . ($index + 1) . '_'
+                                            : 'tradeproduct_';
+                                        $tradeColumns = [];
+                                        foreach ($tradeProduct as $key => $value) {
+                                            if (is_scalar($value) || $value === null) {
+                                                $tradeColumns[$prefix . $key] = $value;
+                                            }
+                                        }
+
+                                        if ($this->tradeProductMode === 'repeated') {
+                                            $products[] = array_merge($mapped, $tradeColumns);
+                                        } else {
+                                            $mapped = array_merge($mapped, $tradeColumns);
+                                        }
+                                    }
+
+                                    if ($tradeProducts !== [] && $this->tradeProductMode === 'numbered') {
+                                        $products[] = $mapped;
+                                    }
                                 }
                             }
 
@@ -267,9 +305,9 @@ readonly class ImportService
 
         $this->containerApi->appendManyToOutputFile($products);
 
-        $this->containerApi->info('Imported ' . \count($products) . ' products.');
+        $this->containerApi->info('Imported ' . \count($products) . ' rows.');
 
         // Notify the end-user in the Productsup notification panel
-        $this->containerApi->sendNotification('success', 'Import completed: ' . \count($products) . ' products imported.');
+        $this->containerApi->sendNotification('success', 'Import completed: ' . \count($products) . ' rows imported.');
     }
 }
